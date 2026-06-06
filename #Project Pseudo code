@@ -1,0 +1,25 @@
+Import numpy as np
+import pandas as pd
+import yfianace as yf
+def_insitutional_stocks = (ticket="BTC", period ="6 months"):
+print("Reading previous data")
+stock_data =yf.download(ticket,period ="6 months")
+if stock_data : empty
+return "Error"
+else:
+df=pd.DataFrame()
+#simple and log returns
+simple_return =pt-pt-1/pt-1
+log_return = ln(pt)-ln(pt-1)
+#pt-1 is calculated by shifting one return downward
+df['close']/df['close].shift(1)
+# then ek baar Boolean mark use krenge for NaN 
+boolean_mask = np.isnan(r)
+#now write skewness and kurtosis formula 
+#then apply if else on kurtosis for it to be >3 
+#now we will use the plotting of histogram by the matplotlibpyplot libraries and seabirn library for making it more prettier 
+#for plotting histogram we will use coordinates like this plt.xlabel,plt.ylabel for naminf of axes
+#plt.title for the naming of the graph 
+#plt.hist(log_returns,bins=30)
+#and for showing we will do by the plt.show
+#and for the comparison we have the superimpose the normal distribution graph on #the obtained graph , so we will calculate mu and Sigma and for this website use library for superimposed is scipy as stats
