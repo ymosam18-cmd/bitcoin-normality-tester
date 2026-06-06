@@ -1,0 +1,91 @@
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+
+def analyze_bitcoin_normality(ticker="BTC-USD", period="6mo"):
+    print(f"📡 Fetching live historical data for {ticker} from Yahoo Finance...")
+    
+    # 1. Data Ingestion & Safety Check
+    raw_data = yf.download(ticker, period=period)
+    
+    if raw_data.empty:
+        print("❌ Error: No data fetched. Check ticker or connection.")
+        return None
+        
+    df = pd.DataFrame()
+    # Extracting standard closing price series safely
+    df['Close'] = raw_data['Close'].squeeze() 
+    
+    # 2. Return Mathematical Calculation (Pandas Shift Engine)
+    # Simple Return: (P_t - P_{t-1}) / P_{t-1}
+    df['Simple_Return'] = df['Close'].pct_change()
+    
+    # Log Return: ln(P_t) - ln(P_{t-1}) = ln(P_t / P_{t-1})
+    df['Log_Return'] = np.log(df['Close'] / df['Close'].shift(1))
+    
+    # 3. Handling NaN Values using Data Cleansing Masks
+    # First row is always NaN due to .shift(1)
+    df = df.dropna(subset=['Log_Return'])
+    
+    log_returns = df['Log_Return'].to_numpy()
+    
+    # 4. Statistical Moments: Skewness and Kurtosis
+    n = len(log_returns)
+    mu = np.mean(log_returns)
+    sigma = np.std(log_returns, ddof=1)
+    
+    # First-Principles Higher-Order Moments Calibration
+    skewness = (np.sum((log_returns - mu)**3) / n) / (sigma**3)
+    kurtosis = (np.sum((log_returns - mu)**4) / n) / (sigma**4)
+    
+    print("\n" + "="*40)
+    print(f"📊 STATISTICAL METRICS FOR {ticker}")
+    print("="*40)
+    print(f"• Sample Size (N) : {n} days")
+    print(f"• Mean ($\mu$)      : {mu:.6f}")
+    print(f"• Std Dev ($\sigma$)   : {sigma:.6f}")
+    print(f"• Skewness        : {skewness:.4f} (Ideal Normal = 0)")
+    print(f"• Kurtosis        : {kurtosis:.4f} (Ideal Normal = 3)")
+    
+    # Evaluating Excess Kurtosis (Leptokurtic verification)
+    if kurtosis > 3:
+        print(f"💥 Result: Kurtosis ({kurtosis:.2f}) > 3 -> FAT-TAILS detected! (Leptokurtic Distribution)")
+    else:
+        print(f"📉 Result: Kurtosis ({kurtosis:.2f}) <= 3 -> Platykurtic/Normal tails.")
+        
+    # 5. Advanced Normality Statistical Tests
+    jb_stat, jb_p_value = stats.jarque_bera(log_returns)
+    print(f"• Jarque-Bera Stat: {jb_stat:.4f} (p-value: {jb_p_value:.6e})")
+    if jb_p_value < 0.05:
+        print("🚨 Decision: Reject Null Hypothesis ($H_0$). Returns are NOT Normally Distributed.")
+    else:
+        print("✅ Decision: Fail to Reject Null Hypothesis ($H_0$). Returns look Normal.")
+    print("="*40 + "\n")
+    
+    # 6. Advanced Visualization Engine (Seaborn + Matplotlib)
+    sns.set_theme(style="darkgrid")
+    plt.figure(figsize=(11, 6))
+    
+    # Plotting target empirical histogram
+    sns.histplot(log_returns, bins=30, kde=False, stat="density", color="#1f77b4", alpha=0.6, label="Empirical Log Returns")
+    
+    # Superimposing the Theoretical Normal Distribution Curve
+    x_axis = np.linspace(mu - 4*sigma, mu + 4*sigma, 500)
+    normal_curve = stats.norm.pdf(x_axis, mu, sigma)
+    plt.plot(x_axis, normal_curve, color="#ff7f0e", linewidth=2.5, label=f"Theoretical Gaussian Curve\n($\mu$={mu:.4f}, $\sigma$={sigma:.3f})")
+    
+    # Styling and Labels
+    plt.title(f"Empirical Bitcoin Log Returns vs. Theoretical Normal Distribution ({period.upper()})", fontsize=13, fontweight='bold', pad=15)
+    plt.xlabel("Log Returns", fontsize=11, labelpad=10)
+    plt.ylabel("Density Probability", fontsize=11, labelpad=10)
+    plt.legend(loc="upper right", frameon=True, fontsize=10)
+    
+    plt.tight_layout()
+    plt.show()
+
+# Execution command
+if __name__ == "__main__":
+    analyze_bitcoin_normality(ticker="BTC-USD", period="6mo")
