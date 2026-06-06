@@ -12,4 +12,4 @@ The engine runs statistical tests to evaluate the distribution of log returns:
 ## Key Insights
 - **Fat-Tails (Leptokurtosis):** Bitcoin exhibits heavy negative/positive tails, proving traditional Risk management models (like standard Value-at-Risk) underprice black-swan events.
 - **Skewness:** High asymmetry during momentum regimes.
-- 
+  
